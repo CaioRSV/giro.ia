@@ -1,0 +1,37 @@
+{
+  "name": "giro.ia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "serverStart": "node --loader ts-node/esm server.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@deepgram/sdk": "^4.11.1",
+    "@ricky0123/vad-web": "^0.0.24",
+    "dotenv": "^17.2.1",
+    "next": "15.4.4",
+    "openai": "^5.10.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/dom-speech-recognition": "^0.0.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.4",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}
