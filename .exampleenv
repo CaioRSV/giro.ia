@@ -1,0 +1,8 @@
+#Preencha com as chaves das respectivas apis e renomeie o arquivo para .env.local
+
+# OpenAI API Configuration
+OPENAI_API_KEY=sk-your-openai-api-key-here
+
+# NewsAPI.org Configuration
+# Get your API key from: https://newsapi.org/register
+NEWS_API_KEY=your-newsapi-key-here
