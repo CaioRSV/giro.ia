@@ -25,7 +25,10 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
 
   useEffect(() => {
     const connectSocket = () => {
-      const socket = new WebSocket(`ws://giro-ia.onrender.com/api/ws`);
+      
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.host;
+    const socket = new WebSocket(`${protocol}://${host}/api/ws`);
 
       socket.onopen = () => console.log("✅ WebSocket conectado");
       socket.onclose = () => console.warn("⚠️ WebSocket desconectado");

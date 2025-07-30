@@ -109,6 +109,6 @@ app.prepare().then(async () => {
 
   // 7. Start the server
   server.listen(process.env.PORT, () => {
-    console.log("Server running on PORT: "+"10000");
+    console.log("Server running on PORT: "+process.env.PORT);
   });
 });
