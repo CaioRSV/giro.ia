@@ -3,25 +3,42 @@ import { WebSocketServer } from "ws";
 import next from "next";
 import { OpenAI } from "openai";
 import 'dotenv/config'; // Loads .env.local
+import { config } from 'dotenv';
+config({ path: '.env.local' });
 import { parse } from 'url';
+import { newsService } from './utils/newsService.js';
 
 // 1. Initialize OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+// 2. Global variable to store news context
+let newsContext: string = "";
+
+// 3. Initialize news context on server start
+async function initializeNewsContext() {
+  console.log("Initializing news context...");
+  const news = await newsService.fetchBrazilianNews();
+  newsContext = newsService.createNewsContext(news);
+  console.log("News context initialized successfully");
+}
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
-  // 2. Create the basic HTTP server using Next.js
+app.prepare().then(async () => {
+  // 2. Initialize news context before starting the server
+  await initializeNewsContext();
+  
+  // 3. Create the basic HTTP server using Next.js
   const server = createServer((req, res) => {
     handle(req, res);
   });
 
-  // 3. Set up the WebSocket server without attaching it
+  // 4. Set up the WebSocket server without attaching it
   const wss = new WebSocketServer({ noServer: true });
 
-  // 4. Handle new WebSocket connections
+  // 5. Handle new WebSocket connections
   wss.on("connection", (ws) => {
     console.log("Client connected to WebSocket");
 
@@ -34,10 +51,20 @@ app.prepare().then(() => {
         if (parsed.type === "chat_text" && parsed.text) {
           console.log(`Received text: "${parsed.text}"`);
 
-          // Step A: Get a text response from the OpenAI LLM
+          // Step A: Create system message with cached news context
+          const systemMessage = `Você é um assistente de IA especializado em política e economia brasileira. 
+          
+${newsContext}
+
+Use essas informações como contexto para responder às perguntas do usuário. Seja informativo, preciso e sempre mencione as fontes quando relevante. Responda em português brasileiro.`;
+
+          // Step B: Get a text response from the OpenAI LLM with context
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [{ role: "user", content: parsed.text }],
+            messages: [
+              { role: "system", content: systemMessage },
+              { role: "user", content: parsed.text }
+            ],
           });
 
           const responseText = completion.choices[0].message.content;
@@ -68,7 +95,7 @@ app.prepare().then(() => {
     });
   });
 
-  // 5. Handle the HTTP upgrade to WebSocket only on a specific path
+  // 6. Handle the HTTP upgrade to WebSocket only on a specific path
   server.on('upgrade', (req, socket, head) => {
     const { pathname } = parse(req.url || '', true);
 
@@ -79,7 +106,7 @@ app.prepare().then(() => {
     }
   });
 
-  // 6. Start the server
+  // 7. Start the server
   server.listen(3000, () => {
     console.log("Server running on http://localhost:3000");
   });
