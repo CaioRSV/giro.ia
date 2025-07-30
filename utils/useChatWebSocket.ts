@@ -35,7 +35,7 @@ export function useChatWebSocket(onToken: (token: string) => void, onDone?: () =
   }, [onToken, onDone]);
 
   useEffect(() => {
-    const socket = new WebSocket(`ws://localhost:10000/api/ws`); // Update the URL
+    const socket = new WebSocket(`ws:///giro-ia.onrender.com/api/ws`); // Update the URL
     socketRef.current = socket;
 
     socket.onmessage = (event) => {
