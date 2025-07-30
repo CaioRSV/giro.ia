@@ -25,7 +25,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
 
   useEffect(() => {
     const connectSocket = () => {
-      const socket = new WebSocket("ws://localhost:3000/api/ws");
+      const socket = new WebSocket(`ws://localhost:${process.env.PORT}/api/ws`);
 
       socket.onopen = () => console.log("✅ WebSocket conectado");
       socket.onclose = () => console.warn("⚠️ WebSocket desconectado");

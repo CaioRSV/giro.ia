@@ -149,8 +149,8 @@ app.prepare().then(function () { return __awaiter(void 0, void 0, void 0, functi
                     }
                 });
                 // 7. Start the server
-                server.listen(3000, function () {
-                    console.log("Server running on http://localhost:3000");
+                server.listen(process.env.PORT, function () {
+                    console.log(`Server running on ws://localhost:${process.env.PORT}`);
                 });
                 return [2 /*return*/];
         }
