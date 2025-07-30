@@ -46,17 +46,18 @@ app.prepare().then(async () => {
     ws.on("message", async (message) => {
       try {
         const parsed = JSON.parse(message.toString());
+        console.log("@!#@!#@!#@!#@!#@!#@!#@!")
 
         // We expect a message with the transcribed text from the client
-        if (parsed.type === "chat_text" && parsed.text) {
-          console.log(`Received text: "${parsed.text}"`);
-
+        if ( (parsed.type === "chat_text" && parsed.text) || (!!message.toString().length)) {
+          console.log("PROMPT ADDED");
+          console.log(newsContext);
           // Step A: Create system message with cached news context
           const systemMessage = `Você é um assistente de IA especializado em política e economia brasileira. 
           
-${newsContext}
+          ${newsContext}
 
-Use essas informações como contexto para responder às perguntas do usuário. Seja informativo, preciso e sempre mencione as fontes quando relevante. Responda em português brasileiro.`;
+          Use essas informações como contexto para responder às perguntas do usuário. Seja informativo, preciso e sempre mencione as fontes quando relevante. Responda em português brasileiro.`;
 
           // Step B: Get a text response from the OpenAI LLM with context
           const completion = await openai.chat.completions.create({
