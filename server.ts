@@ -108,7 +108,7 @@ app.prepare().then(async () => {
   });
 
   // 7. Start the server
-  server.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+  server.listen(process.env.PORT, () => {
+    console.log("Server running on http://localhost:"+process.env.PORT);
   });
 });
