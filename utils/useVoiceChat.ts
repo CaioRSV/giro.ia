@@ -94,7 +94,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
   
   /// WebSockets
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:3000/api/ws");
+    const socket = new WebSocket("ws://localhost:10000/api/ws");
 
     socket.onopen = () => console.log("WebSocket connected");
     socket.onclose = () => console.log("WebSocket disconnected");
@@ -159,6 +159,10 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
       setIsListening(false);
       setIsWaiting(true);
       recognition.start(); // Keeps listening
+    };
+
+    recognition.onspeechstart = () => {
+      console.log("Started hearing speech");
     };
 
     recognition.onerror = (event) => console.error("Speech recognition error", event.error);

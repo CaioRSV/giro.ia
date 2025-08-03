@@ -34,8 +34,13 @@ export function useChatWebSocket(onToken: (token: string) => void, onDone?: () =
     onDoneRef.current = onDone;
   }, [onToken, onDone]);
 
+  
+
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:3000/api/ws"); // Update the URL
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.host;
+    const socket = new WebSocket(`${protocol}://${host}/api/ws`);
+
     socketRef.current = socket;
 
     socket.onmessage = (event) => {

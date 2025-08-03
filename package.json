@@ -4,17 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "serverStart": "node --loader ts-node/esm server.ts",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "node --loader ts-node/esm server.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^4.11.1",
     "@ricky0123/vad-web": "^0.0.24",
     "dotenv": "^17.2.1",
-    "next": "15.4.4",
+    "newsapi": "^2.4.1",
+    "next": "^15.4.4",
     "openai": "^5.10.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
