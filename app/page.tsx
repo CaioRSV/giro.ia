@@ -21,14 +21,14 @@ export default function HomePage() {
   }, []);
 
   // 3. Pass the stable functions to the hook
-  const { isListening, isSpeaking, toggleListening } = useVoiceChat({
+  const { isListening, isSpeaking, toggleListening, setLanguage } = useVoiceChat({
     onUserTranscript: handleUserTranscript,
     onAiResponse: handleAiResponse,
   });
 
   const getButtonState = () => {
     if (isListening) return { text: 'Listening...', disabled: true };
-    if (isSpeaking) return { text: 'AI is Speaking...', disabled: true };
+    if (isSpeaking) return { text: 'AI is Speaking...', disabled: true }; 
     return { text: 'Push to Talk', disabled: false };
   };
 
@@ -37,6 +37,8 @@ export default function HomePage() {
   return (
     <div className="p-6 max-w-2xl mx-auto flex flex-col h-screen">
       <h1 className="text-3xl font-bold text-center mb-4">Voice Chat</h1>
+
+      <p onClick={()=>{setLanguage(prev => prev == "pt-BR" ? "en-US" : "pt-BR")}}>SWITCH TO PT-BR</p>
 
       <div className="flex-grow space-y-4 overflow-y-auto bg-gray-50 p-4 rounded-lg border">
         {conversation.map((msg, index) => (
