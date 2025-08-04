@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "@deepgram/sdk": "^4.11.1",
+    "@pipedream/sdk": "^2.0.0-rc.3",
     "@ricky0123/vad-web": "^0.0.24",
+    "axios": "^1.11.0",
     "dotenv": "^17.2.1",
     "newsapi": "^2.4.1",
     "next": "^15.4.4",

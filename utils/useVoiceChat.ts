@@ -5,7 +5,13 @@ interface VoiceChatProps {
   onAiResponse: (text: string) => void;
 }
 
-const patienceInMs = 4000; // Ms it waits for new inputs in the same phrase
+enum StatusesEnum {
+  Processing = "processing",
+  Written = "written",
+  Ready = "ready"
+}
+
+const patienceInMs = 1000; // Ms it waits for new inputs in the same phrase
 const quickResponseThreshold = 30; // Character limit for quicker responses
 
 export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps) {
@@ -23,6 +29,31 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
   const shouldRestartRef = useRef(false);
 
 
+  // Audio Methods
+  const cleanAudioRef = () => {
+    if(!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    URL.revokeObjectURL(audioRef.current.src);
+    audioRef.current = null;
+  }
+
+  const playAudio = (audioPath: string, options?: {loop?: boolean, endSpeech?: boolean}) => {
+    const audio = new Audio(audioPath);
+    const shouldLoop = !!(options && !!options.loop);
+    audio.loop = shouldLoop;
+    audioRef.current = audio;
+
+    audio.play();
+    audio.onended = () => {
+      if(shouldLoop) return;
+      options?.endSpeech && setIsSpeaking(false);
+      URL.revokeObjectURL(audioPath);
+      cleanAudioRef();
+    };
+  }
+
+
   // Server coms methods
   const sendFullTranscript = (input: string) => {
     if (input) {
@@ -34,7 +65,10 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
       setFullTranscript(undefined);
     }
   }
-  // Patience methods
+
+  // Patience Feature
+
+  /// Patience methods
   const startPatience = () => {
     const now = new Date();
     setLastHeard(now.getTime());
@@ -44,10 +78,10 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
     setIsWaiting(false);
     setLastHeard(undefined);
   }
-
-  // Patience Feature
   const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldNotWait = (fullTranscript ?? '').length <= quickResponseThreshold;
+
+  /// Patience Checker
   useEffect(()=>{
     if(!isWaiting || !lastHeard) return;
     // Check time every 100ms to see if user has anything else to say
@@ -90,8 +124,8 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
     }
   };
 
-  // Setups
-  
+
+  // Setups  
   /// WebSockets
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:10000/api/ws");
@@ -99,33 +133,38 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
     socket.onopen = () => console.log("WebSocket connected");
     socket.onclose = () => console.log("WebSocket disconnected");
 
+    /// Questions and answers
     socket.onmessage = (event) => {
       if (typeof event.data === 'string') {
         const message = JSON.parse(event.data);
         if (message.type === 'ai_response_text') {
           onAiResponse(message.text);
+          cleanAudioRef(); // Stops current audio sooner to prepare for new one (and not annoy the user tbf)
+        }
+        else if (message.type === "status") {
+          cleanAudioRef();
+          if(message.text == StatusesEnum.Processing) {
+            playAudio("/sound1.mp3");
+            // playAudio("/sound1.mp3", {loop: true});
+          }
+          if(message.text == StatusesEnum.Written) {
+            playAudio("/sound1.mp3");
+          }
+          if(message.text == StatusesEnum.Ready) {
+            playAudio("/sound2.mp3");
+          }
+        }
+        else if (message.type === "mcp_flag"){
+          console.log("yeah it used the API")
         }
       } else if (event.data instanceof Blob) {
         setIsSpeaking(true);
 
         // Stops previous audio if still in progress
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          URL.revokeObjectURL(audioRef.current.src);
-          audioRef.current = null;
-        }
+        cleanAudioRef();
 
         const audioUrl = URL.createObjectURL(event.data);
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
-
-        audio.play();
-        audio.onended = () => {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
-        };
+        playAudio(audioUrl, {endSpeech: true});
       }
     };
 
@@ -165,7 +204,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
       console.log("Started hearing speech");
     };
 
-    recognition.onerror = (event) => console.error("Speech recognition error", event.error);
+    // recognition.onerror = (event) => console.error("Speech recognition error", event.error);
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.trim();
       setFullTranscript(prev => prev ? `${prev}, ${transcript}` : transcript);
