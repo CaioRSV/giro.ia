@@ -1,11 +1,13 @@
+import { cacheMemoryNumber } from '@/app/page';
 import { useEffect, useRef, useState } from 'react';
 
 interface VoiceChatProps {
   onUserTranscript: (transcript: string) => void;
   onAiResponse: (text: string) => void;
+  lastMessagesContext?: string;
 }
 
-enum StatusesEnum {
+export enum StatusesEnum {
   Processing = "processing",
   Written = "written",
   Ready = "ready"
@@ -14,15 +16,17 @@ enum StatusesEnum {
 const patienceInMs = 1000; // Ms it waits for new inputs in the same phrase
 const quickResponseThreshold = 30; // Character limit for quicker responses
 
-export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps) {
+export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesContext }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [language, setLanguage] = useState<string>("en-US");
+  const [language, setLanguage] = useState<string>("pt-br");
   const [isMuted, setIsMuted] = useState<boolean>(true);
 
   const [isWaiting, setIsWaiting] = useState<boolean>(false);
   const [lastHeard, setLastHeard] = useState<number>();
   const [fullTranscript, setFullTranscript] = useState<string>();
+
+  const [serverStatus, setServerStatus] = useState<StatusesEnum>();
 
   const [currBlob, setCurrBlob] = useState<Blob>();
 
@@ -31,6 +35,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shouldRestartRef = useRef(false);
 
+  const [cachedInfo, setCachedInfo] = useState<string>();
 
   // Audio Methods
   const cleanAudioRef = () => {
@@ -98,10 +103,16 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
   const sendFullTranscript = (input: string) => {
     if (input) {
       onUserTranscript(input);
+      const resolvedPreviousKnowledge = (cachedInfo ? cachedInfo+", " : "") + (lastMessagesContext ?? "");
+      localStorage.setItem('giroUserInfo', resolvedPreviousKnowledge)
+      const resolvedInput = resolvedPreviousKnowledge 
+          ? `Coisas que eu disse antes para você ter contexto:(${resolvedPreviousKnowledge}) | E agora que eu disse agora e quero uma resposta direta:${input}`
+          : input;
       socketRef.current?.send(JSON.stringify({
         type: "chat_text",
-        text: input,
+        text: resolvedInput,
       }));
+      setCachedInfo((resolvedPreviousKnowledge+", "+input).slice(cacheMemoryNumber)); // Caching with limitter
       setFullTranscript(undefined);
     }
   }
@@ -185,17 +196,20 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
           cleanAudioRef();
           if(message.text == StatusesEnum.Processing) {
             playAudio("/sound1.mp3");
+            setServerStatus(StatusesEnum.Processing);
             // playAudio("/sound1.mp3", {loop: true});
           }
           if(message.text == StatusesEnum.Written) {
             playAudio("/sound1.mp3");
+            setServerStatus(StatusesEnum.Written);
           }
           if(message.text == StatusesEnum.Ready) {
             playAudio("/sound2.mp3");
+            setServerStatus(StatusesEnum.Ready);
           }
         }
         else if (message.type === "mcp_flag"){
-          console.log("yeah it used the API")
+          console.log("MCP News API was used")
         }
       } else if (event.data instanceof Blob) {
         setIsSpeaking(true);
@@ -205,6 +219,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
 
         setCurrBlob(event.data);
         const audioUrl = URL.createObjectURL(event.data);
+        setServerStatus(undefined);
         playAudio(audioUrl, {endSpeech: true});
       }
     };
@@ -238,7 +253,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
     };
     recognition.onend = () => {
       setIsListening(false);
-      setIsWaiting(true);
+      setIsWaiting(false);
       recognition.start(); // Keeps listening
     };
 
@@ -266,5 +281,16 @@ export function useVoiceChat({ onUserTranscript, onAiResponse }: VoiceChatProps)
     };
   }, [language, isMuted, onUserTranscript]);
 
-  return { isListening, isSpeaking, toggleListening, setLanguage, currBlob, loudness, isMuted, setIsMuted };
+  // Caching
+    useEffect(()=>{
+      const value = localStorage.getItem('giroUserInfo');
+      setCachedInfo(value ?? undefined);
+    }, []);
+
+    useEffect(()=>{
+      if(!cachedInfo) return;
+      localStorage.setItem('giroUserInfo', cachedInfo);
+    }, [cachedInfo]);
+
+  return { isListening, isSpeaking, isWaiting, toggleListening, setLanguage, currBlob, loudness, isMuted, setIsMuted, serverStatus };
 }

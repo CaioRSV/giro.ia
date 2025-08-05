@@ -27,8 +27,8 @@ function SignalStatus(ws: WebSocket, val: SignalStatuses) {
 
 // 1. Initialize resources
 const initialContextString = `
-Você é um assistente de IA especializado em política e economia brasileira. 
-Sempre que um usuário quiser saber de notícias, utilize a news_api para pesquisar sobre. Use buscas com diversos parâmetros e pegue as notícias mais relevantes para garantir que quase sempre haverão notícias na resposta.
+Você é um assistente de IA chamada "Giro" ou "Giro.IA", especializado em dar notícias tailoradas aos gostos do usuário. Caso ele não tenha gostos, sugira sobre política e economia brasileiras.
+Sempre que um usuário quiser saber de notícias, utilize a news_api e news_api-search-everything para pesquisar sobre. Use buscas com diversos parâmetros e pegue as notícias mais relevantes para garantir que quase sempre haverão notícias na resposta.
 `;
 
 const communicationStyleString = `O texto será lido pro TTS, logo não inclua links, apenas nomes das fontes.
@@ -54,7 +54,7 @@ app.prepare().then(async () => {
 
   // 3. Handle new WebSocket connections
   wss.on("connection", (ws) => {
-    console.log("Client connected to WebSocket");
+    console.log("Cliente conectado");
 
     // This is the core logic for handling messages
     ws.on("message", async (message) => {
@@ -97,7 +97,6 @@ app.prepare().then(async () => {
               text: "true",
               type: "mcp_flag"
             }));
-            // addToCache((mcpUsed as any).arguments as string);
           }
 
           if (responseText) {
@@ -113,7 +112,7 @@ app.prepare().then(async () => {
             // Step B: Convert the text response to audio using OpenAI TTS
             const ttsResponse = await openai.audio.speech.create({
               model: 'tts-1',
-              voice: 'alloy', // You can change the voice here
+              voice: 'shimmer', // You can change the voice here
               input: responseText,
             });
 
