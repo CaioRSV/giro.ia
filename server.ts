@@ -67,8 +67,8 @@ app.prepare().then(async () => {
           SignalStatus(ws, StatusesEnum.Processing);
 
           // Bare-bones prompt + Preferences acquired if they exist
-          const cacheInfo = `Aqui está uma lista de pesquisas recentes do usuário para contextualizar: ${getCache()}`;
-          const systemMessage = initialContextString + cacheInfo + communicationStyleString;
+          // const cacheInfo = `Aqui está uma lista de pesquisas recentes do usuário para contextualizar: ${getCache()}`;
+          const systemMessage = initialContextString + communicationStyleString;
 
           // Step B: Get a text response from the OpenAI LLM with context
           const response = await openai.responses.create({
@@ -97,7 +97,7 @@ app.prepare().then(async () => {
               text: "true",
               type: "mcp_flag"
             }));
-            addToCache((mcpUsed as any).arguments as string);
+            // addToCache((mcpUsed as any).arguments as string);
           }
 
           if (responseText) {
