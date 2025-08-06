@@ -1,4 +1,3 @@
-import { cacheMemoryNumber } from '@/app/page';
 import { useEffect, useRef, useState } from 'react';
 
 interface VoiceChatProps {
@@ -16,6 +15,7 @@ export enum StatusesEnum {
 }
 
 const quickResponseThreshold = 30; // Character limit for quicker responses
+export const cacheMemoryNumber = 20000 // Chars
 
 export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesContext, language, patienceInMs }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
@@ -144,7 +144,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
 
       // Waited enough, now send full transcript to the server for prompt processing
       if ((now - lastHeard > patienceInMs) || shouldNotWait) {
-        console.log("SENDING SHIT");
+        console.log("Enviando mensagem para o servidor...");
         sendFullTranscript(fullTranscript ?? "...");
         resetPatience();
         return;
