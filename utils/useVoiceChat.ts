@@ -105,7 +105,6 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
     if (input) {
       onUserTranscript(input);
       const resolvedPreviousKnowledge = (cachedInfo ? cachedInfo+", " : "") + (lastMessagesContext ?? "");
-      localStorage.setItem('giroUserInfo', resolvedPreviousKnowledge)
       const resolvedInput = resolvedPreviousKnowledge 
           ? `Coisas que eu disse antes para você ter contexto:(${resolvedPreviousKnowledge}) | E agora que eu disse agora e quero uma resposta direta:${input}`
           : input;
@@ -113,7 +112,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
         type: "chat_text",
         text: `[EXPECTED LANGUAGE OF RESPONSE: ${language}]${resolvedInput}`,
       }));
-      setCachedInfo((resolvedPreviousKnowledge+", "+input).slice(cacheMemoryNumber)); // Caching with limitter
+      saveCacheInfo((resolvedPreviousKnowledge+", "+input).slice(0, cacheMemoryNumber));
       setFullTranscript(undefined);
     }
   }
@@ -283,15 +282,15 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
   }, [language, isMuted, onUserTranscript]);
 
   // Caching
+  const saveCacheInfo = (val: string) => {
+    if(!val) return;
+    localStorage.setItem('giroUserInfo', val);
+  }
+
     useEffect(()=>{
       const value = localStorage.getItem('giroUserInfo');
       setCachedInfo(value ?? undefined);
     }, []);
-
-    useEffect(()=>{
-      if(!cachedInfo) return;
-      localStorage.setItem('giroUserInfo', cachedInfo);
-    }, [cachedInfo]);
 
   return { isListening, isSpeaking, isWaiting, toggleListening, currBlob, loudness, isMuted, setIsMuted, serverStatus };
 }
