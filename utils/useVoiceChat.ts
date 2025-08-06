@@ -179,7 +179,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
   // Setups  
   /// WebSockets
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:10000/api/ws");
+    const socket = new WebSocket("ws://localhost:"+process.env.PORT+"/api/ws");
 
     socket.onopen = () => console.log("WebSocket connected");
     socket.onclose = () => console.log("WebSocket disconnected");

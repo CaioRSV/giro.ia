@@ -43,11 +43,6 @@ const circleSizeSumParameter = 1 // X + (0.0 - 1.0)
 const circleScaleLoudnessMultiplier = 1.5 // X + (0.0 - 1.0)
 const audioThrottlingParameter = 8; // The lower it is, the more quickly the center circle animates while the bot speaks
 
-
-const statusLabels = {
-  waiting: "Giro"
-}
-
 export default function HomePage() {
   const [conversation, setConversation] = useState<Message[]>([]);
 
