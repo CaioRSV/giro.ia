@@ -5,10 +5,33 @@ import { StatusesEnum, useVoiceChat } from '@/utils/useVoiceChat';
 import { AnimatePresence, motion } from "motion/react"
 import { twMerge } from 'tailwind-merge';
 
-import { Mic, MousePointerClick } from 'lucide-react';
+import { ChevronDown, ListCollapse, ListCollapseIcon, Menu, Mic, MousePointerClick, PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { MicOff } from 'lucide-react';
 
 import Flag from 'react-world-flags';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Message {
   author: 'You' | 'AI';
@@ -40,13 +63,6 @@ export default function HomePage() {
     setConversation((prev) => [...prev, { author: 'AI', text: responseText }]);
   }, []);
 
-  // 3. Pass the stable functions to the hook
-  const { isListening, isSpeaking, isWaiting, toggleListening, setLanguage, currBlob, loudness, isMuted, setIsMuted, serverStatus} = useVoiceChat({
-    onUserTranscript: handleUserTranscript,
-    onAiResponse: handleAiResponse,
-    lastMessagesContext: conversation.filter(e => e.author === "You").length ? conversation.filter(e => e.author === "You").map(e => e.text).join(", ") : undefined,
-  });
-
   const [loudnessHistory, setLoudnessHistory] = useState<number[]>();
   const [throttledLoudness, setThrottledLoudness] = useState<number>(0);
 
@@ -55,13 +71,31 @@ export default function HomePage() {
 
   const languageOptions = {
     "pt-br": "br",
+    "en-us": "usa",
+    "es-ES": "es"
+  }
 
+  const LanguageToStringObject = {
+    "pt-br": "Português",
+    "en-us": "Inglês",
+    "es-ES": "Espanhol"
   }
 
   type LanguageKey = keyof typeof languageOptions;
 
-  const [currLanguage, setCurrLanguage] = useState<LanguageKey>();
+  const [currLanguage, setCurrLanguage] = useState<LanguageKey>("pt-br");
 
+  const [showChat, setShowChat] = useState<boolean>();
+
+  const [patienceInMs, setPatienceInMs] = useState<number>(1000);
+
+  const { isListening, isSpeaking, isWaiting, toggleListening, currBlob, loudness, isMuted, setIsMuted, serverStatus} = useVoiceChat({
+    onUserTranscript: handleUserTranscript,
+    onAiResponse: handleAiResponse,
+    lastMessagesContext: conversation.filter(e => e.author === "You").length ? conversation.filter(e => e.author === "You").map(e => e.text).join(", ") : undefined,
+    language: currLanguage,
+    patienceInMs: patienceInMs,
+  });
 
   useEffect(()=>{
     if(!loudnessHistory?.includes(loudness)){
@@ -71,17 +105,48 @@ export default function HomePage() {
       const values = [...loudnessHistory, loudness];
       const meanLoudness = values.reduce((sum, val) => sum + val, 0) / values.length;
       setThrottledLoudness(meanLoudness);
-      console.log('NEW LOUDNESS: '+loudness);
       setLoudnessHistory(undefined);
     }
   },[loudness]);
+
+  useEffect(()=>{
+    if(conversation.length){
+      showChat == undefined && setShowChat(true);
+    }
+  }, [conversation]);
+
+
+  // Cached options handling
+  useEffect(()=>{
+    const cachedLanguage = localStorage.getItem('giroLanguage')
+    const resolvedLanguage =  cachedLanguage as keyof typeof languageOptions ?? "pt-br";
+
+    const cachedPatience = localStorage.getItem('giroPatience');
+    const resolvedPatience = cachedPatience == null ? 1000 : parseInt(cachedPatience);
+
+    setCurrLanguage(resolvedLanguage);
+    setPatienceInMs(resolvedPatience);
+  }, []);
+
+  useEffect(()=>{
+    localStorage.setItem('giroLanguage', currLanguage);
+  }, [currLanguage]);
+
+  useEffect(()=>{
+    localStorage.setItem('giroPatience', patienceInMs.toString());
+  }, [patienceInMs]);
+
+  const handleClearCache = () => {
+    localStorage.clear();
+    window.location.reload();
+  }
 
     return (
     <div className="w-screen h-screen">
       <div className="flex sm:flex-row flex-col w-full h-full bg-radial-[at_25%_25%] from-slate-200 to-slate-400 overflow-y-scroll scrollbar-hide">
           <div 
             className={twMerge("absolute w-screen h-screen flex justify-center items-center transition-all z-50",
-              appActive ? "opacity-0" : "bg-blue-500/20 backdrop-blur-sm cursor-pointer"
+              appActive ? "opacity-0" : "bg-blue-500/40 backdrop-blur-sm cursor-pointer"
             )}
             onClick={()=>{
               toggleListening();
@@ -91,35 +156,119 @@ export default function HomePage() {
               pointerEvents: appActive ? "none" : "all"
             }}
           >
-            <div className="size-64 rounded-full flex justify-center items-center">
-              <MousePointerClick size={"50%"} className="text-white" /> 
+            <div className="rounded-full sm:flex justify-center items-center gap-2">
+              <div className="h-full flex sm:justify-end justify-center items-center">
+                <MousePointerClick size={"50%"} className="text-white" /> 
+              </div>
+              <div className="rounded-lg flex flex-col gap-2 p-4 font-sans text-lg font-semibold h-full">
+                <p className="text-white">• Clique na tela</p>
+                <p className="text-white">• Desmute seu microfone</p>
+                <p className="text-white">• Converse e se informe com o Giro.IA!</p>
+              </div>
             </div>
           </div>
 
           <div className="min-h-screen p-16 flex-1 w-full flex flex-col justify-center items-center scrollbar-hide">
-              {/* <div className="flex justify-center items-center bg-slate-400 p-0.5 rounded-full">
-                <button 
-                  onClick={()=>{setIsMuted(prev => !prev)}}
-                  className="rounded-4xl flex justify-center items-center bg-slate-300 w-fit cursor-pointer"
-                >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={isMuted ? "mic-off" : "mic-on"}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ type: "keyframes", duration: 0.05 }}
-                    >
-                      <Flag code="br" className="h-10 p-1 rounded-4xl" />
-                    </motion.div>
-                  </AnimatePresence>
-                </button>
-                <p>Português</p>
-              </div> */}
+              <Dialog>
+                <DialogTrigger>
+                  <Menu size={40} className="text-slate-900 cursor-pointer" />
+                </DialogTrigger>
+                <DialogContent className="h-[90%] min-w-64 sm:w-auto w-[90%] overflow-y-scroll scrollbar-hide bg-radial-[at_25%_25%] from-slate-200 to-slate-400">
+                  <DialogHeader>
+                    <DialogTitle>Configurações</DialogTitle>
+                    <DialogDescription>
+                      Personalize o agente
+                    </DialogDescription>
+
+                    <div className="w-full bg-accent/30 p-2 flex justify-between rounded-lg items-center">
+                      <p>Escolher linguagem</p>
+
+                      <div className="min-w-16 w-full" />
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="cursor-pointer flex gap-1 items-center justify-between w-32"
+                          >
+                            <Flag className="size-4" code={languageOptions[currLanguage]} />
+                              {LanguageToStringObject[currLanguage as keyof typeof languageOptions]}
+                            <ChevronDown />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>Linguagem de detecção de voz</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={()=>{setCurrLanguage("pt-br")}}>Português</DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>{setCurrLanguage("en-us")}}>Inglês</DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>{setCurrLanguage("es-ES")}}>Espanhol</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <div className="w-full bg-accent/30 p-2 flex justify-between rounded-lg items-center">
+                      <p>Tempo de espera para continuação de frases</p>
+
+                      <div className="min-w-16 w-full" />
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="cursor-pointer flex gap-1 items-center justify-between w-32"
+                          >
+                              {`${patienceInMs/1000} segundo${patienceInMs != 1000 ? "s" : ""}`}
+                            <ChevronDown />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>Tempo de espera para continuação de frases</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={()=>{setPatienceInMs(1000)}}>1 segundo</DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>{setPatienceInMs(3000)}}>3 segundos</DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>{setPatienceInMs(5000)}}>5 segundos</DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>{setPatienceInMs(10000)}}>10 segundos</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* <p className="text-sm">A primeira frase deve ser mais longa para que a espera subsequente seja ativada</p> */}
+                    </div>
+
+                    <div className="w-full bg-accent/30 p-2 flex justify-between rounded-lg items-center">
+                      <p>Limpar informações</p>
+
+                      <div className="min-w-16 w-full" />
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="default"
+                            className="cursor-pointer hover:bg-red-900"
+                          >
+                            Limpar dados de uso
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza que deseja limpar seus dados de uso?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              O nosso agente esquecerá de todo o seu histórico de utilização até o momento, incluind suas preferências e interesses.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction className="bg-red-700 hover:bg-red-800 cursor-pointer" onClick={handleClearCache}>Excluir dados</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
 
               <div className="flex-1 flex flex-col justify-center items-center">
                 <motion.div
-                  className="rounded-full bg-radial from-sky-400 from-40% to-sky-600 aspect-square sm:h-[75%] sm:w-auto w-[75%] min-h-32 min-w-32 flex justify-center items-center"
+                  className="overflow-hidden rounded-full bg-radial from-sky-400 from-40% to-sky-600 aspect-square sm:h-[75%] sm:w-auto w-[75%] min-h-32 min-w-32 flex justify-center items-center"
                   animate={{
                     scale: circleSizeSumParameter + (throttledLoudness * circleScaleLoudnessMultiplier),
                     opacity: 
@@ -137,7 +286,7 @@ export default function HomePage() {
                 >
                   <div className="flex flex-col justify-center items-center">
                     <p className="text-[4vw] text-slate-100 font-semibold font-mono opacity-80 select-none">Giro.IA</p>
-                    <p className="text-white">{
+                    <p className="text-white sm:text-[1.2vw] text-center select-none">{
                       
                       isWaiting
                         ? "Giro está aguardando..."
@@ -179,35 +328,52 @@ export default function HomePage() {
                 </AnimatePresence>
               </button>
             </div>
+
+            
           </div>
 
-          <div className={twMerge("p-8 transition-all duration-200", 
-            conversation.length ? "sm:h-full sm:w-[20%] opacity-100" : "w-0 opacity-0"
+          <div 
+            className={twMerge("transition-all",
+              conversation.length ? "p-4 opacity-100" : "opacity-0 pointer-events-none w-0 h-0"
+            )}
+          >
+            <div className="bg-slate-500/5 p-3 rounded-md cursor-pointer flex justify-center items-center"
+              onClick={()=>{
+                setShowChat(prev => !prev);
+              }}
+            >
+              { !showChat ? <PanelLeftClose/> : <PanelRightClose/> }
+            </div>
+              
+          </div>
+          
+          <div className={twMerge(" transition-all duration-200", 
+            conversation.length && showChat ? "sm:h-full h-fit sm:w-[20%] opacity-100 p-4" : "w-0 h-0 opacity-0"
           )}>
             <p className="text-slate-800 font-semibold mb-2">Histórico da conversa</p>
-              <motion.div 
-                className="flex flex-col gap-2 max-h-[95%] overflow-y-scroll scrollbar-hide"
-                style={{
-                  width: 0
-                }}
-                animate={{
-                  width: conversation.length ? "100%" : 0
-                }}
-                transition={{
-                  duration: 0.2
-                }}
-              >
-                {conversation.map((msg, index) => (
-                  <div key={index} className={`flex ${msg.author === 'You' ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className={`px-4 py-2 rounded-lg max-w-sm ${
-                        msg.author !== 'You' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
+            <motion.div 
+              className="flex flex-col gap-2 max-h-[95%] overflow-y-scroll scrollbar-hide"
+              style={{ width: 0 }}
+              animate={{ width: conversation.length ? "100%" : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              { conversation.map((msg, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className={`flex ${msg.author === 'You' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`px-4 py-2 rounded-lg max-w-sm ${
+                      msg.author !== 'You' ? 'bg-sky-500/40 text-white pl-2' : ' text-gray-800 pr-2 bg-slate-200/40'
+                    }`}
+                  >
+                    {msg.text}
                   </div>
-                ))}
+                </motion.div>
+              ))}
             </motion.div>
           </div>
       </div>

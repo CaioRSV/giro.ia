@@ -5,6 +5,8 @@ interface VoiceChatProps {
   onUserTranscript: (transcript: string) => void;
   onAiResponse: (text: string) => void;
   lastMessagesContext?: string;
+  language: string;
+  patienceInMs: number; // Ms it waits for new inputs in the same phrase
 }
 
 export enum StatusesEnum {
@@ -13,13 +15,11 @@ export enum StatusesEnum {
   Ready = "ready"
 }
 
-const patienceInMs = 1000; // Ms it waits for new inputs in the same phrase
 const quickResponseThreshold = 30; // Character limit for quicker responses
 
-export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesContext }: VoiceChatProps) {
+export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesContext, language, patienceInMs }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [language, setLanguage] = useState<string>("pt-br");
   const [isMuted, setIsMuted] = useState<boolean>(true);
 
   const [isWaiting, setIsWaiting] = useState<boolean>(false);
@@ -110,7 +110,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
           : input;
       socketRef.current?.send(JSON.stringify({
         type: "chat_text",
-        text: resolvedInput,
+        text: `[EXPECTED LANGUAGE OF RESPONSE: ${language}]${resolvedInput}`,
       }));
       setCachedInfo((resolvedPreviousKnowledge+", "+input).slice(cacheMemoryNumber)); // Caching with limitter
       setFullTranscript(undefined);
@@ -292,5 +292,5 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
       localStorage.setItem('giroUserInfo', cachedInfo);
     }, [cachedInfo]);
 
-  return { isListening, isSpeaking, isWaiting, toggleListening, setLanguage, currBlob, loudness, isMuted, setIsMuted, serverStatus };
+  return { isListening, isSpeaking, isWaiting, toggleListening, currBlob, loudness, isMuted, setIsMuted, serverStatus };
 }
