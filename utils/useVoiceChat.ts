@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+const resolvedPort = process.env.PORT;
 interface VoiceChatProps {
   onUserTranscript: (transcript: string) => void;
   onAiResponse: (text: string) => void;
@@ -179,7 +180,7 @@ export function useVoiceChat({ onUserTranscript, onAiResponse, lastMessagesConte
   // Setups  
   /// WebSockets
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:"+process.env.PORT+"/api/ws");
+    const socket = new WebSocket("/api/ws");
 
     socket.onopen = () => console.log("WebSocket connected");
     socket.onclose = () => console.log("WebSocket disconnected");
