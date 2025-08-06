@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Giro.IA
 
-## Getting Started
+Uma implementação de um agente de notícias acessível e facilmente personalizável.
 
-First, run the development server:
+
+
+
+## Run Locally
+
+É necessário ter acesso a chaves API da OpenAI, e também criar uma instância própria de um server MCP da News API por meio do [Pipedream](https://mcp.pipedream.com/app/news_api) ou plataformas similares.
+
+A partir disso, clone o projeto
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+  git clone https://github.com/CaioRSV/giro.ia.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Entre no diretório
+```bash
+  cd my-project
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Instale as dependências
+```bash
+  npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Prepare um arquivo `.env` baseado na referência abaixo.
+```
+OPENAI_API_KEY= # Chave API da OpenAI
+PIPEDREAM_API_URL = # URL server News API MCP
+PORT = # Port de hospedagem
+```
 
-## Learn More
+E então, inicie a aplicação
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+  npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Client:** React, Next.js, TailwindCSS
 
-## Deploy on Vercel
+**Server:** Node.js (HTTP + WebSockets), Next.js Custom Server
+## Authors
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [@CaioRSV](https://www.github.com/CaioRSV)

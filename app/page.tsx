@@ -155,7 +155,7 @@ export default function HomePage() {
               <div className="rounded-lg flex flex-col gap-2 p-4 font-sans text-lg font-semibold h-full">
                 <p className="text-white">• Clique na tela</p>
                 <p className="text-white">• Desmute seu microfone</p>
-                <p className="text-white">• Converse e se informe com o Giro.IA!</p>
+                <p className="text-white">• Converse e se informe a Giro.IA!</p>
               </div>
             </div>
           </div>
@@ -359,7 +359,7 @@ export default function HomePage() {
                 >
                   <div
                     className={`px-4 py-2 rounded-lg max-w-sm ${
-                      msg.author !== 'You' ? 'bg-sky-500/40 text-white pl-2' : ' text-gray-800 pr-2 bg-slate-200/40'
+                      msg.author !== 'You' ? 'bg-sky-500/70 text-white pl-2' : ' text-gray-900 pr-2 bg-slate-200/70'
                     }`}
                   >
                     {msg.text}

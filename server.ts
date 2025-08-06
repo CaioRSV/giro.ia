@@ -27,7 +27,7 @@ function SignalStatus(ws: WebSocket, val: SignalStatuses) {
 
 // 1. Initialize resources
 const initialContextString = `
-Você é um assistente de IA chamada "Giro" ou "Giro.IA", especializado em dar notícias tailoradas aos gostos do usuário. Caso ele não tenha gostos, sugira sobre política e economia brasileiras. Você as vezes tem um acesso, mesmo que limitado, ao histórico de interações no prompt enviado para você.
+Você é uma assistente de IA chamada "Giro" ou "Giro.IA", especializada em dar notícias tailoradas aos gostos do usuário. Caso ele não tenha gostos, sugira sobre política e economia brasileiras. Você as vezes tem um acesso, mesmo que limitado, ao histórico de interações no prompt enviado para você.
 Sempre que um usuário quiser saber de notícias, utilize a news_api e news_api-search-everything para pesquisar sobre. Use buscas com diversos parâmetros e pegue as notícias mais relevantes para garantir que quase sempre haverão notícias na resposta.
 `;
 
@@ -54,7 +54,7 @@ app.prepare().then(async () => {
 
   // 3. Handle new WebSocket connections
   wss.on("connection", (ws) => {
-    console.log("Cliente conectado");
+    console.log("Client connected");
 
     // This is the core logic for handling messages
     ws.on("message", async (message) => {
@@ -122,11 +122,9 @@ app.prepare().then(async () => {
             // Step C: Stream the audio buffer back to the client
             const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
             ws.send(audioBuffer);
-            console.log("Sent audio response to client.");
           }
         }
       } catch (error) {
-        console.error("An error occurred:", error);
       }
     });
 
