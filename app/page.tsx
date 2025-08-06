@@ -39,9 +39,6 @@ interface Message {
 }
 
 
-
-export const cacheMemoryNumber = 20000 // Chars
-
 const circleSizeSumParameter = 1 // X + (0.0 - 1.0)
 const circleScaleLoudnessMultiplier = 1.5 // X + (0.0 - 1.0)
 const audioThrottlingParameter = 8; // The lower it is, the more quickly the center circle animates while the bot speaks
